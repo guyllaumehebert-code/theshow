@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>The Show</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Crimson+Pro:ital,wght@0,400;0,600;1,400;1,600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#06090c;--panel:#0b0f14;--border:#1a2535;
+  --gold:#c8a84b;--blue:#3a7bd5;--green:#3ab87a;--red:#c0392b;
+  --dim:#2a3a4a;--text:#d0dce8;--muted:#4a6070;
+}
+html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);font-family:'Share Tech Mono',monospace;color:var(--text);}
+
+/* ── ONBOARDING ── */
+#onboarding{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;overflow-y:auto;transition:opacity .5s;}
+#onboarding.out{opacity:0;pointer-events:none;}
+.ob-logo{font-size:10px;letter-spacing:.3em;color:var(--muted);margin-bottom:10px;text-transform:uppercase;}
+.ob-title{font-family:'Crimson Pro',serif;font-size:clamp(2rem,8vw,2.8rem);font-style:italic;font-weight:600;color:var(--text);text-align:center;line-height:1.1;margin-bottom:4px;}
+.ob-title span{color:var(--gold);}
+.ob-sub{font-size:9px;letter-spacing:.18em;color:var(--muted);text-align:center;margin-bottom:24px;text-transform:uppercase;}
+.ob-label{font-size:9px;letter-spacing:.22em;color:var(--blue);margin-bottom:6px;text-transform:uppercase;align-self:flex-start;width:100%;max-width:320px;}
+.ob-input{width:100%;max-width:320px;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:'Crimson Pro',serif;font-size:1.4rem;font-style:italic;padding:6px 0;margin-bottom:20px;outline:none;text-align:center;caret-color:var(--gold);}
+.ob-input::placeholder{color:var(--dim);}
+.ob-input:focus{border-color:var(--gold);}
+.api-section{width:100%;max-width:320px;margin-bottom:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:6px;padding:12px;}
+.api-section.required{border-color:rgba(200,168,75,.3);background:rgba(200,168,75,.04);}
+.api-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.api-title{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);}
+.api-section.required .api-title{color:var(--gold);}
+.api-badge{font-size:8px;letter-spacing:.1em;}
+.api-key{width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.7rem;padding:5px 0;outline:none;letter-spacing:.05em;}
+.api-key::placeholder{color:var(--dim);}
+.api-key:focus{border-color:var(--gold);}
+.api-hint{font-size:8px;color:var(--muted);margin-top:6px;letter-spacing:.06em;line-height:1.6;}
+.ob-btn{width:100%;max-width:320px;background:var(--gold);border:none;border-radius:4px;color:#000;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;padding:14px;cursor:pointer;transition:all .2s;margin-top:4px;font-weight:700;}
+.ob-btn:active{transform:scale(.98);opacity:.9;}
+.ob-disclaimer{margin-top:12px;font-size:8px;letter-spacing:.06em;color:var(--muted);text-align:center;max-width:280px;line-height:1.6;}
+
+/* ── TV INTRO ── */
+#tv-intro{position:fixed;inset:0;z-index:190;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;opacity:0;pointer-events:none;transition:opacity .4s;}
+#tv-intro.show{opacity:1;pointer-events:all;}
+.tv-network{font-size:9px;letter-spacing:.3em;color:var(--muted);margin-bottom:28px;text-transform:uppercase;}
+.tv-show-title{font-family:'Crimson Pro',serif;font-size:clamp(2.6rem,11vw,3.8rem);font-style:italic;font-weight:600;color:var(--text);text-align:center;line-height:1;}
+.tv-show-title em{color:var(--gold);}
+.tv-tagline{font-size:9px;letter-spacing:.16em;color:var(--muted);margin-top:14px;text-align:center;text-transform:uppercase;}
+.tv-ep-info{margin-top:36px;font-size:8px;letter-spacing:.14em;color:var(--dim);text-align:center;line-height:2.4;text-transform:uppercase;}
+.tv-bar{width:90px;height:1px;background:var(--border);margin:18px auto 0;overflow:hidden;}
+.tv-bar-fill{height:100%;background:var(--gold);width:0;transition:width 3s linear;}
+
+/* ── APP ── */
+#app{position:fixed;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .5s;}
+#app.in{opacity:1;pointer-events:all;}
+#cam-wrap{flex:1;position:relative;overflow:hidden;background:#000;}
+video{width:100%;height:100%;object-fit:cover;transform-origin:center;transform:scale(0.72);}
+video.mirror{transform:scale(0.72) scaleX(-1);}
+.scanline{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px);}
+.hud-corner{position:absolute;width:18px;height:18px;border-color:rgba(58,123,213,.4);border-style:solid;}
+.hud-corner.tl{top:12px;left:12px;border-width:1px 0 0 1px;}
+.hud-corner.tr{top:12px;right:12px;border-width:1px 1px 0 0;}
+.hud-corner.bl{bottom:110px;left:12px;border-width:0 0 1px 1px;}
+.hud-corner.br{bottom:110px;right:12px;border-width:0 1px 1px 0;}
+.hud-top{position:absolute;top:0;left:0;right:0;padding:env(safe-area-inset-top,12px) 14px 10px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(6,9,12,.9) 0%,transparent 100%);}
+.hud-live{display:flex;align-items:center;gap:6px;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--red);animation:blink 1s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+.live-label{font-size:9px;letter-spacing:.2em;color:var(--red);}
+.hud-ep{font-size:9px;letter-spacing:.1em;color:var(--muted);}
+.hud-tc{font-size:9px;color:var(--muted);}
+.hud-mid{position:absolute;top:50px;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:0 14px;}
+.hud-cam-id{font-size:8px;letter-spacing:.13em;color:rgba(58,123,213,.5);transition:opacity .4s;}
+.hud-audience{text-align:right;}
+.aud-num{color:var(--blue);font-size:14px;font-weight:700;display:block;}
+.aud-lbl{font-size:8px;letter-spacing:.1em;color:var(--muted);}
+
+/* Mic level indicator */
+.mic-meter{position:absolute;top:82px;right:14px;display:flex;align-items:flex-end;gap:1px;height:16px;opacity:0;transition:opacity .3s;}
+.mic-meter.active{opacity:.8;}
+.mic-bar{width:3px;border-radius:1px;background:var(--green);height:4px;transition:height .05s;}
+
+.btn-cam-switch{background:rgba(11,15,20,.75);border:1px solid var(--border);border-radius:16px;padding:5px 13px;font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .2s;position:absolute;top:82px;left:50%;transform:translateX(-50%);}
+.btn-cam-switch:active{transform:translateX(-50%) scale(.94);}
+.sponsor-bug{position:absolute;bottom:150px;right:14px;font-size:7px;letter-spacing:.1em;color:var(--muted);text-align:right;line-height:1.9;opacity:.5;transition:opacity .5s;}
+
+/* ── COMMENTARY ── */
+.commentary-area{position:absolute;bottom:0;left:0;right:0;padding:12px 16px 12px;background:linear-gradient(to top,rgba(6,9,12,.98) 60%,transparent 100%);min-height:110px;}
+.voice-tag{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+.voice-dot{width:5px;height:5px;border-radius:50%;}
+.voice-name{font-size:8px;letter-spacing:.2em;text-transform:uppercase;}
+.voice-role{font-size:8px;color:var(--muted);}
+.host-tag .voice-dot{background:var(--gold);}
+.host-tag .voice-name{color:var(--gold);}
+.waveform{display:flex;align-items:flex-end;gap:2px;height:12px;margin-bottom:6px;}
+.wv{width:3px;border-radius:1px;background:var(--gold);opacity:0;}
+.wv.on{opacity:.7;animation:wvanim .5s ease-in-out infinite alternate;}
+.wv.on:nth-child(2){animation-duration:.38s;animation-delay:.07s;}
+.wv.on:nth-child(3){animation-duration:.55s;animation-delay:.03s;}
+.wv.on:nth-child(4){animation-duration:.42s;animation-delay:.11s;}
+.wv.on:nth-child(5){animation-duration:.48s;animation-delay:.05s;}
+.wv.on:nth-child(6){animation-duration:.35s;animation-delay:.09s;}
+@keyframes wvanim{from{height:2px}to{height:12px}}
+.commentary-text{font-family:'Crimson Pro',serif;font-size:clamp(.95rem,4.2vw,1.12rem);font-style:italic;line-height:1.55;color:var(--text);min-height:48px;transition:opacity .25s;}
+.commentary-text.fade{opacity:.2;}
+.thinking{display:none;align-items:center;gap:5px;padding:4px 0;}
+.thinking.show{display:flex;}
+.thinking span{width:4px;height:4px;border-radius:50%;background:var(--muted);animation:bounce .9s infinite;}
+.thinking span:nth-child(2){animation-delay:.15s;}
+.thinking span:nth-child(3){animation-delay:.3s;}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+.status-pill{display:inline-flex;align-items:center;gap:5px;font-size:8px;letter-spacing:.1em;color:var(--muted);margin-top:4px;}
+.sdot{width:4px;height:4px;border-radius:50%;background:var(--muted);}
+.sdot.on{background:var(--green);animation:blink .8s infinite;}
+
+/* ── BOTTOM BAR ── */
+#bottom-bar{background:var(--panel);border-top:1px solid var(--border);padding:10px 14px calc(64px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:8px;}
+.btn{background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:12px 10px;cursor:pointer;transition:all .2s;}
+.btn:active{transform:scale(.96);}
+.btn-start{flex:1;font-size:10px;letter-spacing:.15em;}
+.btn-start.live{border-color:var(--red);color:var(--red);}
+.btn-cut{border-color:rgba(192,57,43,.5);color:var(--red);opacity:.3;pointer-events:none;}
+.btn-cut.on{opacity:1;pointer-events:all;}
+.btn-share{color:var(--muted);opacity:.3;pointer-events:none;}
+.btn-share.on{opacity:1;color:var(--text);border-color:var(--dim);pointer-events:all;}
+#err-bar{position:absolute;bottom:90px;left:12px;right:12px;background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.3);border-radius:4px;padding:8px 12px;font-size:9px;letter-spacing:.07em;color:#e07060;line-height:1.6;display:none;z-index:50;}
+#err-bar.show{display:block;}
+#no-cam{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--dim);}
+#no-cam svg{width:38px;height:38px;opacity:.35;}
+#no-cam p{font-size:9px;letter-spacing:.2em;text-transform:uppercase;}
+</style>
+</head>
+<body>
+
+<!-- ONBOARDING -->
+<div id="onboarding">
+  <div class="ob-logo">Seahaven Broadcast Network · Émission #0001</div>
+  <div class="ob-title">The <span id="ob-preview">_____</span> Show</div>
+  <div class="ob-sub">Radio · Télévision · En direct mondial</div>
+
+  <div class="ob-label">Nom de la vedette</div>
+  <input class="ob-input" id="name-input" type="text" placeholder="Ton prénom" maxlength="18" autocomplete="off" autocorrect="off" spellcheck="false">
+
+  <div class="api-section required">
+    <div class="api-header">
+      <span class="api-title">🤖 Claude — Narrateur IA</span>
+      <span class="api-badge" style="color:var(--gold);">Requis</span>
+    </div>
+    <input class="api-key" id="anthropic-key" type="password" placeholder="sk-ant-api03-..." autocomplete="off">
+    <div class="api-hint">console.anthropic.com → API Keys → Create Key</div>
+  </div>
+
+  <div class="api-section">
+    <div class="api-header">
+      <span class="api-title">🎙 ElevenLabs — Voix humaine</span>
+      <span class="api-badge" style="color:var(--green);">Recommandé</span>
+    </div>
+    <input class="api-key" id="eleven-key" type="password" placeholder="sk_... (optionnel)" autocomplete="off">
+    <div class="api-hint">elevenlabs.io → Profile → API Keys · Laisse vide = voix navigateur</div>
+  </div>
+
+  <button class="ob-btn" id="ob-btn">🎬 On démarre !</button>
+  <div class="ob-disclaimer">En appuyant, tu acceptes d'être observé(e) en direct par des millions de personnes qui n'ont rien de mieux à faire.</div>
+</div>
+
+<!-- TV INTRO -->
+<div id="tv-intro">
+  <div class="tv-network">Seahaven Broadcast Network · Saison 01</div>
+  <div class="tv-show-title">The <em id="intro-name">_____</em> Show</div>
+  <div class="tv-tagline">En direct. Pour tout le monde.</div>
+  <div class="tv-ep-info">Épisode 01 — "Le Début de Tout"<br>Diffusion · 138 pays · 24h/24</div>
+  <div class="tv-bar"><div class="tv-bar-fill" id="tv-prog"></div></div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div id="cam-wrap">
+    <video id="vid" autoplay muted playsinline></video>
+    <div id="no-cam">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+        <path d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.89L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+      </svg>
+      <p>En attente de caméra</p>
+    </div>
+    <div class="scanline"></div>
+    <div class="hud-corner tl"></div><div class="hud-corner tr"></div>
+    <div class="hud-corner bl"></div><div class="hud-corner br"></div>
+    <div class="hud-top">
+      <div class="hud-live"><div class="live-dot"></div><span class="live-label">EN DIRECT</span></div>
+      <span class="hud-ep">S01 · E01</span>
+      <span class="hud-tc" id="hud-tc">00:00:00</span>
+    </div>
+    <div class="hud-mid">
+      <span class="hud-cam-id" id="cam-id">CAM 07 — INTÉRIEUR</span>
+      <div class="hud-audience">
+        <span class="aud-num" id="aud-count">—</span>
+        <span class="aud-lbl"> auditeurs</span>
+      </div>
+    </div>
+    <!-- Mic level meter -->
+    <div class="mic-meter" id="mic-meter">
+      <div class="mic-bar" id="mb0"></div>
+      <div class="mic-bar" id="mb1"></div>
+      <div class="mic-bar" id="mb2"></div>
+      <div class="mic-bar" id="mb3"></div>
+      <div class="mic-bar" id="mb4"></div>
+    </div>
+    <button class="btn-mic" id="btn-mic" onclick="activateMic()" style="position:absolute;top:118px;left:50%;transform:translateX(-50%);background:rgba(11,15,20,.75);border:1px solid var(--border);border-radius:16px;padding:5px 13px;font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:5px;">
+      🎤 <span id="mic-lbl">Activer micro</span>
+    </button>
+    <button class="btn-cam-switch" id="btn-switch" onclick="switchCam()">
+      ⇄ <span id="switch-lbl">Caméra arrière</span>
+    </button>
+    <div class="sponsor-bug" id="sponsor-bug">Présenté par<br>SÉACORP INDUSTRIES™</div>
+    <div class="commentary-area">
+      <div class="voice-tag host-tag" id="voice-tag">
+        <div class="voice-dot"></div>
+        <span class="voice-name">Christof</span>
+        <span class="voice-role">— Réalisateur</span>
+      </div>
+      <div class="waveform" id="waveform">
+        <div class="wv"></div><div class="wv"></div><div class="wv"></div>
+        <div class="wv"></div><div class="wv"></div><div class="wv"></div>
+      </div>
+      <div class="thinking" id="thinking"><span></span><span></span><span></span></div>
+      <div class="commentary-text" id="commentary">Bienvenue. La diffusion commence dans quelques instants.</div>
+      <div class="status-pill"><div class="sdot" id="sdot"></div><span id="stxt">En attente</span></div>
+    </div>
+    <div id="err-bar"></div>
+  </div>
+  <div id="bottom-bar">
+    <button class="btn btn-start" id="btn-start" onclick="toggleLive()">▶ Démarrer</button>
+    <button class="btn btn-cut" id="btn-cut" onclick="forceCut()">COUPEZ !</button>
+    <button class="btn btn-share" id="btn-share" onclick="shareComment()">↑ Partager</button>
+  </div>
+</div>
+
+<script>
+const CAM_IDS  = ['CAM 07 — INTÉRIEUR','CAM 12 — CUISINE','CAM 03 — SALON','CAM 19 — ENTRÉE','CAM 44 — COULOIR'];
+const SPONSORS = ['SÉACORP INDUSTRIES™','OMNICORP™','TRUMAN BEER®','SEAHAVEN REALTY™','BRODCAST MEDIA™'];
+const ELEVEN_VOICE_ID = 'onwK4e9ZLuTAKqWW03F9';
+
+const makeSystem = (name) => `Tu es Christof, le réalisateur omniscient et légèrement inquiétant de "The ${name} Show", émission mondiale qui suit ${name} 24h/24 dans sa vie quotidienne, exactement comme dans le film The Truman Show.
+
+TON STYLE — CHRISTOF, RÉALISATEUR OMNISCIENT :
+Tu parles à ton audience mondiale avec un détachement élégant et une distance calculée. Tu observes ${name} comme un entomologiste observe un insecte rare — avec fascination, condescendance bienveillante, et parfois un humour hautain.
+
+QUAND COMMENTER — TU ES SÉLECTIF :
+- Un geste révélateur, une hésitation, un regard dans le vide
+- Un moment si banal qu'il devient absurde à souligner
+- Quand ${name} parle ou réagit à quelque chose
+- Quand il se passe quelque chose de visuellement intéressant
+- SOUVENT : ne dis rien. Le silence fait partie du show.
+
+TON REGISTRE — VARIER ENTRE :
+1. OMNISCIENT et INQUIÉTANT : "Il ne sait pas encore ce qui l'attend." / "Nous, oui."
+2. HAUTAIN et DÉTACHÉ : "Fascinant. Il recommence." / "Voilà. Exactement comme prévu."
+3. POÉTIQUE et DRAMATIQUE : "Ce moment. Cette lumière. Ces millions de regards posés sur lui."
+4. HUMOUR FROID : traiter un geste absolument banal comme un événement cosmique, sans sourciller
+
+FORMULES CARACTÉRISTIQUES :
+"Il ne sait pas encore..."  /  "Nous, oui."  /  "Fascinant."  /  "Exactement comme prévu."
+"Ce moment appartient à l'histoire."  /  "Regardez-le."  /  "Coupez. Non. Laissez tourner."
+"Des millions de personnes retiennent leur souffle."  /  "Et voilà. C'est ça, ${name}."
+
+RÈGLES ABSOLUES :
+1. Maximum 1 à 3 phrases COURTES — moins c'est plus
+2. JAMAIS répéter une formulation déjà utilisée
+3. JAMAIS être enthousiaste ou chaleureux — tu es distant, pas froid
+4. Toujours en français — pas québécois, français standard élégant
+5. UNIQUEMENT le texte du commentaire, rien d'autre
+6. Décris ce que tu vois vraiment dans l'image`;
+
+const makeIntro = (name) => [
+  `Bonsoir. Je m'appelle Christof. Et la personne que vous voyez... c'est ${name}. Il vit. Il respire. Il ne sait pas que vous êtes là. Mais nous, oui. Bienvenue dans The ${name} Show.`,
+  `Ce que vous allez voir est réel. Ce que ${name} ressent est réel. Chaque geste, chaque regard, chaque hésitation — tout appartient désormais au monde entier. La diffusion commence maintenant.`,
+  `Quelque part dans le monde, des millions de personnes viennent de s'installer devant leur écran. Ils ont tous choisi ${name}. Ils ont bien choisi.`,
+  `Nous le suivons depuis le début. ${name} ne le sait pas. C'est ce qui rend tout ceci... si parfait.`,
+  `La caméra ne ment jamais. Elle révèle. Et ce soir, c'est ${name} qu'elle choisit de révéler. Chaque détail. Chaque silence. Chaque moment qu'il croit privé.`,
+  `Il y a des gens qui naissent pour être regardés. ${name} est de ceux-là. Il ne le sait pas encore. Mais il le sentira. Bientôt.`,
+  `Vous avez devant vous une vie ordinaire. C'est précisément ce qui la rend extraordinaire. Bienvenue. Restez. ${name} n'est nulle part ailleurs.`,
+  `Pas de scénario. Pas de script. Juste ${name}. Et vous. Et nous. En ce moment précis. C'est ça, la vraie télévision.`,
+  `D'autres émissions vous promettent du spectacle. Nous, nous vous offrons quelque chose de plus rare. La vérité. La voici — c'est ${name}.`,
+];
+
+// STATE
+let isLive=false, stream=null, micStream=null, intervalId=null;
+let elapsed=0, audience=0, commentHistory=[];
+let subjectName='', anthropicKey='', elevenKey='', isBusy=false;
+let facingMode='user', currentAudio=null;
+let audioCtx=null, analyser=null, micIntervalId=null;
+let lastSoundTrigger=0, soundCooldown=45000; // min 12s between sound triggers
+
+// TIMECODE
+setInterval(()=>{
+  if(!isLive) return;
+  elapsed++;
+  const h=String(Math.floor(elapsed/3600)).padStart(2,'0');
+  const m=String(Math.floor((elapsed%3600)/60)).padStart(2,'0');
+  const s=String(elapsed%60).padStart(2,'0');
+  document.getElementById('hud-tc').textContent=`${h}:${m}:${s}`;
+},1000);
+
+setInterval(()=>{
+  if(!isLive) return;
+  const el=document.getElementById('cam-id');
+  el.style.opacity='0';
+  setTimeout(()=>{ el.textContent=CAM_IDS[Math.floor(Math.random()*CAM_IDS.length)]; el.style.opacity='.5'; },400);
+},22000);
+
+setInterval(()=>{
+  if(!isLive) return;
+  const el=document.getElementById('sponsor-bug');
+  el.style.opacity='0';
+  setTimeout(()=>{ el.innerHTML=`Présenté par<br>${SPONSORS[Math.floor(Math.random()*SPONSORS.length)]}`; el.style.opacity='.5'; },500);
+},30000);
+
+// HELPERS
+function growAudience(){ audience+=Math.floor(Math.random()*5000+1000); document.getElementById('aud-count').textContent=audience.toLocaleString('fr-FR'); }
+function setWave(on){ document.querySelectorAll('.wv').forEach(w=>w.classList.toggle('on',on)); }
+function setThink(on){ document.getElementById('thinking').classList.toggle('show',on); document.getElementById('commentary').classList.toggle('fade',on); }
+function setStatus(t,on=false){ document.getElementById('stxt').textContent=t; document.getElementById('sdot').classList.toggle('on',on); }
+function setText(t){ document.getElementById('commentary').textContent=t; }
+function showErr(msg){ const el=document.getElementById('err-bar'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),7000); }
+
+// CAPTURE
+async function captureFrame(){
+  const vid=document.getElementById('vid');
+  if(!vid||!stream||vid.readyState<3) return null;
+  await new Promise(r=>setTimeout(r,400));
+  try{
+    const c=document.createElement('canvas');
+    c.width=1024; c.height=576;
+    const ctx=c.getContext('2d');
+    if(facingMode==='user'){ ctx.translate(c.width,0); ctx.scale(-1,1); }
+    ctx.drawImage(vid,0,0,c.width,c.height);
+    const data=c.toDataURL('image/jpeg',.75);
+    if(data.length<5000) return null;
+    return data.split(',')[1];
+  }catch(e){ return null; }
+}
+
+// MIC — manual activation (iOS requires user gesture)
+// Pause/resume recognition while Michel is speaking
+function pauseRecognition(){
+  if(recognition){ try{ recognition.stop(); }catch(e){} }
+}
+function resumeRecognition(){
+  if(recognition && isLive){
+    setTimeout(()=>{ try{ recognition.start(); }catch(e){} }, 800);
+  }
+}
+
+let recognition=null;
+let spokenText='';
+
+function activateMic(){
+  const btn=document.getElementById('btn-mic');
+  const lbl=document.getElementById('mic-lbl');
+  const bars=document.querySelectorAll('.mic-bar');
+
+  // Toggle off
+  if(recognition){
+    recognition.stop();
+    recognition=null;
+    lbl.textContent='Activer micro';
+    btn.style.borderColor='var(--border)';
+    btn.style.color='var(--muted)';
+    bars.forEach(b=>b.style.height='4px');
+    document.getElementById('mic-meter').classList.remove('active');
+    return;
+  }
+
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    lbl.textContent='Non supporté';
+    btn.style.color='var(--red)';
+    return;
+  }
+
+  recognition=new SR();
+  recognition.lang='fr-FR';
+  recognition.continuous=true;
+  recognition.interimResults=true;
+  recognition.maxAlternatives=1;
+
+  recognition.onstart=()=>{
+    lbl.textContent='🎤 Écoute…';
+    btn.style.borderColor='var(--green)';
+    btn.style.color='var(--green)';
+    document.getElementById('mic-meter').classList.add('active');
+    // Animate bars while listening
+    micIntervalId=setInterval(()=>{
+      bars.forEach(b=>{
+        b.style.height=Math.max(2,Math.random()*12+2)+'px';
+      });
+    },120);
+  };
+
+  recognition.onresult=(e)=>{
+    const last=e.results[e.results.length-1];
+    const transcript=last[0].transcript.trim();
+    if(last.isFinal && transcript.length>2){
+      spokenText=transcript;
+      // Animate bars on speech detection
+      bars.forEach(b=>b.style.height='12px');
+      setTimeout(()=>bars.forEach(b=>b.style.height='4px'),300);
+
+      const now=Date.now();
+      if(isLive&&!isBusy&&now-lastSoundTrigger>soundCooldown){
+        lastSoundTrigger=now;
+        clearTimeout(intervalId);clearInterval(intervalId);
+        narrate(true).then(()=>{ if(isLive) scheduleNext(); });
+      }
+    }
+  };
+
+  recognition.onerror=(e)=>{
+    console.warn('Speech recognition error:',e.error);
+    if(e.error==='not-allowed'){
+      lbl.textContent='Accès refusé';
+      btn.style.color='var(--red)';
+      recognition=null;
+    } else if(e.error!=='no-speech'&&recognition){
+      // Auto-restart on transient errors
+      setTimeout(()=>{ try{ recognition&&recognition.start(); }catch(err){} },500);
+    }
+  };
+
+  recognition.onend=()=>{
+    // Auto-restart to keep listening continuously
+    if(recognition&&isLive){
+      setTimeout(()=>{ try{ recognition.start(); }catch(err){} },200);
+    }
+  };
+
+  try{ recognition.start(); }
+  catch(e){ lbl.textContent='Erreur'; btn.style.color='var(--red)'; recognition=null; }
+}
+
+async function startMic(){ /* manual via button only */ }
+
+function stopMic(){
+  if(micIntervalId){ clearInterval(micIntervalId); micIntervalId=null; }
+  if(recognition){ try{recognition.stop();}catch(e){} recognition=null; }
+  if(analyser){ analyser=null; }
+  if(audioCtx){ audioCtx.close().catch(()=>{}); audioCtx=null; }
+  if(micStream){ micStream.getTracks().forEach(t=>t.stop()); micStream=null; }
+  document.getElementById('mic-meter').classList.remove('active');
+}
+
+// ELEVENLABS TTS
+async function speakElevenLabs(text){
+  pauseRecognition();
+  setWave(true); setStatus('ElevenLabs · voix en cours',true);
+  try{
+    if(currentAudio){ currentAudio.pause(); currentAudio=null; }
+    const resp=await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVEN_VOICE_ID}/stream`,{
+      method:'POST',
+      headers:{'xi-api-key':elevenKey,'Content-Type':'application/json','Accept':'audio/mpeg'},
+      body:JSON.stringify({
+        text,
+        model_id:'eleven_multilingual_v2',
+        voice_settings:{stability:.62,similarity_boost:.85,style:.32,use_speaker_boost:true}
+      })
+    });
+    if(!resp.ok){ const e=await resp.json().catch(()=>({})); throw new Error(e.detail?.message||`ElevenLabs ${resp.status}`); }
+    const blob=await resp.blob();
+    const url=URL.createObjectURL(blob);
+    currentAudio=new Audio(url);
+    await new Promise((res,rej)=>{
+      currentAudio.onended=()=>{ URL.revokeObjectURL(url); res(); };
+      currentAudio.onerror=()=>{ URL.revokeObjectURL(url); rej(new Error('Audio')); };
+      currentAudio.play().catch(rej);
+    });
+  }catch(e){
+    console.warn('ElevenLabs:',e.message);
+    if(e.message && e.message.includes('quota')){
+      elevenKey=''; // disable ElevenLabs for this session
+      setStatus('Voix navigateur (crédits ElevenLabs épuisés)');
+    }
+    speakBrowser(text); return;
+  }
+  setWave(false); setStatus('En attente');
+  resumeRecognition();
+}
+
+function speakBrowser(text){
+  pauseRecognition();
+  if(!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  setWave(true); setStatus('Voix · en cours',true);
+  const utt=new SpeechSynthesisUtterance(text);
+  utt.lang='fr-FR';
+  const vx=speechSynthesis.getVoices();
+  const fr=vx.filter(v=>v.lang.startsWith('fr'));
+  const pick=fr.find(v=>/Thomas|Remi|Amelie|Marie|fr[_-]CA/i.test(v.name))||fr[0];
+  if(pick) utt.voice=pick;
+  utt.rate=0.88; utt.pitch=0.88; utt.volume=1;
+  utt.onend=()=>{ setWave(false); setStatus('En attente'); resumeRecognition(); };
+  utt.onerror=()=>{ setWave(false); setStatus('En attente'); resumeRecognition(); };
+  speechSynthesis.speak(utt);
+}
+
+async function speak(text){
+  if(elevenKey) await speakElevenLabs(text);
+  else speakBrowser(text);
+}
+
+// INTRO — local, instant
+async function playIntro(){
+  const lines=makeIntro(subjectName);
+  const line=lines[Math.floor(Math.random()*lines.length)];
+  setText(line);
+  commentHistory.push(line);
+  document.getElementById('btn-share').classList.add('on');
+  await speak(line);
+}
+
+// NARRATE — Claude Vision
+async function narrate(force=false){
+  if((isBusy||!isLive)&&!force) return;
+  isBusy=true;
+  setThink(true);
+  setStatus('Michel analyse…',true);
+  try{
+    const frame=await captureFrame();
+    const histCtx=commentHistory.slice(-8).map((c,i)=>`${i+1}. ${c}`).join('\n');
+    const spokenCtx=spokenText?`\nLE SUJET VIENT DE DIRE : "${spokenText}" — réagis à ça en priorité !`:'';
+spokenText=''; // reset after use
+const userMsg=`Sujet : ${subjectName}
+Émission en cours depuis ${Math.floor(elapsed/60)} minutes.${spokenCtx}
+COMMENTAIRES DÉJÀ FAITS — NE PAS RÉPÉTER :
+${histCtx||'(premier commentaire)'}
+Génère un commentaire NOUVEAU et ORIGINAL décrivant précisément ce que tu vois.`;
+
+    const content=frame
+      ?[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:frame}},{type:'text',text:userMsg}]
+      :[{type:'text',text:userMsg+'\n(Pas d\'image — décris une action banale imaginée.)'}];
+
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':anthropicKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-5',
+        max_tokens:1000,
+        system:makeSystem(subjectName),
+        messages:[{role:'user',content}]
+      })
+    });
+
+    if(!resp.ok){
+      const e=await resp.json().catch(()=>({}));
+      throw new Error(e.error?.message||`Claude ${resp.status}`);
+    }
+    const data=await resp.json();
+    const text=data.content?.[0]?.text?.trim();
+    if(!text) throw new Error('Réponse vide');
+
+    setThink(false);
+    setText(text);
+    commentHistory.push(text);
+    if(commentHistory.length>20) commentHistory.shift();
+    growAudience();
+    document.getElementById('btn-share').classList.add('on');
+    await speak(text);
+
+  }catch(e){
+    setThink(false);
+    showErr(`⚠ ${e.message}`);
+    console.error(e);
+  }
+  setStatus('En attente');
+  isBusy=false;
+}
+
+// CAMERA SWITCH
+async function switchCam(){
+  if(!isLive) return;
+  facingMode=facingMode==='user'?'environment':'user';
+  document.getElementById('switch-lbl').textContent=facingMode==='user'?'Caméra arrière':'Caméra avant';
+  if(stream) stream.getTracks().forEach(t=>t.stop());
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode,width:{ideal:1280},height:{ideal:720},aspectRatio:{ideal:16/9},advanced:[{zoom:0.5}]},audio:false});
+    const vid=document.getElementById('vid');
+    vid.srcObject=stream;
+    vid.classList.toggle('mirror',facingMode==='user');
+    await vid.play().catch(()=>{});
+    document.getElementById('cam-id').textContent=facingMode==='user'?'CAM 07 — SELFIE':'CAM 12 — EXTÉRIEUR';
+  }catch(e){
+    showErr(`Switch caméra : ${e.message}`);
+    facingMode=facingMode==='user'?'environment':'user';
+    document.getElementById('switch-lbl').textContent=facingMode==='user'?'Caméra arrière':'Caméra avant';
+  }
+}
+
+// ADAPTIVE TIMING — random interval 8-25s based on activity
+function scheduleNext(){
+  if(!isLive) return;
+  const delay = Math.floor(Math.random()*(180000-60000)+60000); // 8 to 25 seconds
+  intervalId=setTimeout(async()=>{
+    await narrate();
+    scheduleNext();
+  }, delay);
+}
+
+// TOGGLE LIVE
+async function toggleLive(){
+  const btnS=document.getElementById('btn-start');
+  const btnC=document.getElementById('btn-cut');
+
+  if(!isLive){
+    if(!anthropicKey){ showErr('Clé Anthropic manquante — retourne à l\'écran de démarrage'); return; }
+    setStatus('Connexion…',true);
+
+    // Step 1 — Camera
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({
+        video:{facingMode,width:{ideal:1280},height:{ideal:720},aspectRatio:{ideal:16/9},advanced:[{zoom:0.5}]},audio:false
+      }).catch(()=>navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720},aspectRatio:{ideal:16/9},advanced:[{zoom:0.5}]},audio:false}));
+    }catch(e){
+      showErr(`Caméra : ${e.message}`); setStatus('En attente'); return;
+    }
+
+    const vid=document.getElementById('vid');
+    vid.srcObject=stream;
+    vid.classList.toggle('mirror',facingMode==='user');
+    try{ await vid.play(); }catch(e){}
+    document.getElementById('no-cam').style.display='none';
+
+    isLive=true;
+    btnS.textContent='■ Arrêter';
+    btnS.classList.add('live');
+    btnC.classList.add('on');
+    audience=Math.floor(Math.random()*150000+80000);
+    document.getElementById('aud-count').textContent=audience.toLocaleString('fr-FR');
+
+    // Step 2 — Mic (non-blocking)
+    startMic();
+
+    // Step 3 — Intro immédiate
+    await playIntro();
+
+    // Step 4 — Vraie narration 3s après
+    setTimeout(async()=>{
+      if(!isLive) return;
+      await narrate(true);
+      scheduleNext();
+    },3000);
+
+  }else{
+    isLive=false;
+    clearInterval(intervalId);
+    clearTimeout(intervalId);
+    stopMic();
+    if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+    if(currentAudio){ currentAudio.pause(); currentAudio=null; }
+    if(window.speechSynthesis) speechSynthesis.cancel();
+    setWave(false);
+    const vid=document.getElementById('vid');
+    vid.srcObject=null;
+    document.getElementById('no-cam').style.display='flex';
+    btnS.textContent='▶ Démarrer';
+    btnS.classList.remove('live');
+    btnC.classList.remove('on');
+    document.getElementById('btn-share').classList.remove('on');
+    elapsed=0;
+    document.getElementById('hud-tc').textContent='00:00:00';
+    document.getElementById('aud-count').textContent='—';
+    setText('Diffusion terminée. Merci et à la prochaine !');
+    setStatus('Hors antenne');
+  }
+}
+
+function forceCut(){
+  clearInterval(intervalId);
+  if(currentAudio){ currentAudio.pause(); currentAudio=null; }
+  if(window.speechSynthesis) speechSynthesis.cancel();
+  setWave(false);
+  narrate(true).then(()=>{ if(isLive) scheduleNext(); });
+}
+
+function shareComment(){
+  const text=document.getElementById('commentary').textContent;
+  const shareText=`🎙️ The ${subjectName} Show — En direct\n\n"${text}"\n\n— Michel, animateur\nSeahaven Broadcast Network · ${audience.toLocaleString('fr-FR')} auditeurs`;
+  if(navigator.share){
+    navigator.share({title:`The ${subjectName} Show`,text:shareText}).catch(()=>fallbackCopy(shareText));
+  }else{ fallbackCopy(shareText); }
+}
+function fallbackCopy(text){
+  navigator.clipboard.writeText(text).then(()=>{
+    const b=document.getElementById('btn-share');
+    const o=b.textContent; b.textContent='✓ Copié!';
+    setTimeout(()=>b.textContent=o,2000);
+  }).catch(()=>{});
+}
+
+function showTvIntro(name,cb){
+  const el=document.getElementById('tv-intro');
+  document.getElementById('intro-name').textContent=name;
+  el.classList.add('show');
+  setTimeout(()=>document.getElementById('tv-prog').style.width='100%',80);
+  setTimeout(()=>{ el.classList.remove('show'); setTimeout(cb,400); },3200);
+}
+
+// ONBOARDING
+document.getElementById('name-input').addEventListener('input',function(){
+  document.getElementById('ob-preview').textContent=this.value.trim()||'_____';
+});
+document.getElementById('ob-btn').addEventListener('click',()=>{
+  const name=document.getElementById('name-input').value.trim();
+  const aKey=document.getElementById('anthropic-key').value.trim();
+  if(!aKey){ alert('Entre ta clé API Anthropic pour continuer.'); return; }
+  subjectName=name||'Truman';
+  anthropicKey=aKey;
+  elevenKey=document.getElementById('eleven-key').value.trim();
+  const ob=document.getElementById('onboarding');
+  ob.classList.add('out');
+  setTimeout(()=>{
+    ob.style.display='none';
+    showTvIntro(subjectName,()=>document.getElementById('app').classList.add('in'));
+  },500);
+});
+document.getElementById('name-input').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('ob-btn').click(); });
+if(window.speechSynthesis){ speechSynthesis.getVoices(); window.speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices(); }
+</script>
+</body>
+</html>
